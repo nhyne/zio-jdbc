@@ -3,6 +3,7 @@ package zio.jdbc
 import zio._
 import zio.schema._
 import zio.test.TestAspect._
+import zio.test.Assertion.isTrue
 import zio.test._
 
 object ZConnectionPoolSpec extends ZIOSpecDefault {
@@ -53,7 +54,17 @@ object ZConnectionPoolSpec extends ZIOSpecDefault {
           for {
             _ <- ZIO.scoped(ZConnectionPool.h2test.build)
           } yield assertCompletes
-        }
+        } +
+          test("invalidate connection") {
+            for {
+              assertion <- transaction {
+                             for {
+                               connection <- ZIO.service[ZConnection]
+                               _          <- ZConnectionPool.invalidate(connection)
+                             } yield assert(connection.connection.isClosed)(isTrue)
+                           }
+            } yield assertion
+          }
       } +
         suite("sql") {
           test("create table") {

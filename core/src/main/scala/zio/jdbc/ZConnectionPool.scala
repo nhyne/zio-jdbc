@@ -26,6 +26,12 @@ import java.sql.Connection
  */
 final case class ZConnectionPool(transaction: ZLayer[Any, Throwable, ZConnection])
 object ZConnectionPool {
+
+  def invalidate(zc: ZConnection): ZIO[Any, Throwable, Unit] =
+    zc.access { connection =>
+      connection.close()
+    }
+
   def h2test: ZLayer[Any, Throwable, ZConnectionPool] =
     ZLayer.scoped {
       for {
