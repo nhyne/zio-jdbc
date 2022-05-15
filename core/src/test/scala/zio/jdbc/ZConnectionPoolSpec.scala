@@ -56,14 +56,15 @@ object ZConnectionPoolSpec extends ZIOSpecDefault {
           } yield assertCompletes
         } +
           test("invalidate connection") {
-            for {
-              assertion <- transaction {
+            (for {
+              pool      <- ZIO.service[ZConnectionPool]
+              assertion <- pool.transaction {
                              for {
                                connection <- ZIO.service[ZConnection]
-                               _          <- ZConnectionPool.invalidate(connection)
-                             } yield assert(connection.connection.isClosed)(isTrue)
+                               _          <- pool.invalidate(connection)
+                             } yield assertTrue(connection.connection.isClosed)
                            }
-            } yield assertion
+            } yield assertion).provideLayer(ZConnectionPool.h2test)
           }
       } +
         suite("sql") {
