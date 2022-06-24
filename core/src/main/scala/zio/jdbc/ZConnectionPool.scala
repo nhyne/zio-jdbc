@@ -24,10 +24,17 @@ import java.sql.Connection
  * A `ZConnectionPool` represents a pool of connections, and has the ability to
  * supply a transaction that can be used for executing SQL statements.
  */
+
+trait ZConnectionPoolT {
+  def invalidate(zc: ZConnection): UIO[Unit]
+
+  def transaction: ZLayer[Any, Throwable, ZConnection]
+}
+
 final case class ZConnectionPool(
   transaction: ZLayer[Any, Throwable, ZConnection],
   private val pool: ZPool[Throwable, ZConnection]
-) {
+) extends ZConnectionPoolT {
   def invalidate(zc: ZConnection): UIO[Unit] = pool.invalidate(zc)
 }
 object ZConnectionPool {
